@@ -11,7 +11,7 @@
  */
 
 // ── Config ───────────────────────────────────────────────────────────────────
-const API_BASE        = 'https://urban-safety-heatmap-backend.onrender.com';
+const API_BASE        = 'http://127.0.0.1:5000';
 const MAP_CENTER      = [30.3165, 78.0322];
 const MAP_ZOOM        = 12;
 const AUTO_REFRESH_MS = 5 * 60 * 1000;   // 5 minutes
