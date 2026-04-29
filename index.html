@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Dehradun Urban Safety Heatmap — Visualise relative area risk using crime data, crowd estimation, and AI clustering." />
+  <title>Dehradun Urban Safety Heatmap</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <!-- App Styles -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── Loading Overlay ────────────────────────────────────── -->
+  <div id="loading-overlay">
+    <div class="loader-ring"></div>
+    <span class="loader-text">Loading Dehradun Map…</span>
+  </div>
+
+  <!-- ── Header ─────────────────────────────────────────────── -->
+  <header id="header">
+    <div class="header-left">
+      <div class="logo-dot"></div>
+      <div>
+        <div class="header-title">Dehradun Urban Safety Heatmap</div>
+        <div class="header-subtitle">Uttarakhand, India &nbsp;·&nbsp; Real-time Risk Index</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <span id="live-clock">00:00:00</span>
+      <span id="status-badge" data-mode="live">LIVE</span>
+    </div>
+  </header>
+
+  <!-- ── Map Wrapper ────────────────────────────────────────── -->
+  <div id="map-wrapper">
+
+    <!-- Leaflet Map -->
+    <div id="map"></div>
+
+    <!-- ── Side Panel ─────────────────────────────────────────── -->
+    <aside id="side-panel">
+
+      <!-- View Toggle -->
+      <div class="panel-card" id="view-card">
+        <div class="card-title">Heatmap View</div>
+        <div id="view-controls">
+          <button class="view-btn active" id="btn-crime" data-view="crime" aria-pressed="true">
+            <span class="btn-icon crime">⚠</span>
+            <span class="btn-label">Crime Risk Index</span>
+          </button>
+          <button class="view-btn" id="btn-crowd" data-view="crowd" aria-pressed="false">
+            <span class="btn-icon crowd">◎</span>
+            <span class="btn-label">Crowd Density</span>
+          </button>
+          <button class="view-btn" id="btn-ai" data-view="ai" aria-pressed="false">
+            <span class="btn-icon ai">✦</span>
+            <span class="btn-label">AI Safety Analysis</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Time Slider -->
+      <div class="panel-card" id="time-section">
+        <div class="card-title-row">
+          <span class="card-title">Simulate Time of Day</span>
+          <button id="btn-reset-time" class="reset-btn" title="Reset to current time">↺ Now</button>
+        </div>
+        <div class="time-display">
+          <span id="time-label">12:00</span>
+          <span id="time-period">PM</span>
+        </div>
+        <input
+          type="range"
+          id="time-slider"
+          min="0" max="23" value="12" step="1"
+          aria-label="Hour of day"
+        />
+        <div class="time-ticks">
+          <span>12 AM</span>
+          <span>6 AM</span>
+          <span>12 PM</span>
+          <span>6 PM</span>
+          <span>11 PM</span>
+        </div>
+      </div>
+
+      <!-- Legend -->
+      <div class="panel-card" id="legend-section">
+        <div class="card-title">Risk Legend</div>
+        <div class="legend-items">
+          <div class="legend-item">
+            <div class="legend-dot safe"></div>
+            <span>Safe — Low crime, moderate crowd</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot medium"></div>
+            <span>Medium — Moderate risk, monitor</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot risky"></div>
+            <span>Risky — High crime or busy transit</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Stats -->
+      <div class="panel-card" id="stats-section">
+        <div class="card-title">AI Zone Classification</div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value safe" id="stat-safe">—</div>
+            <div class="stat-label">Safe</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value medium" id="stat-medium">—</div>
+            <div class="stat-label">Medium</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value risky" id="stat-risky">—</div>
+            <div class="stat-label">Risky</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zone List -->
+      <div class="panel-card" id="zone-list-section">
+        <div class="card-title-row">
+          <span class="card-title">All Zones</span>
+          <div class="sort-tabs">
+            <button class="sort-tab active" data-sort="risk">Risk</button>
+            <button class="sort-tab" data-sort="safety">Safety</button>
+            <button class="sort-tab" data-sort="name">A–Z</button>
+          </div>
+        </div>
+        <div id="zone-list-body"></div>
+      </div>
+
+    </aside>
+
+    <!-- Bottom-right info badge -->
+    <div id="info-badge">
+      <strong>Dehradun, Uttarakhand</strong>
+      30.3165° N, 78.0322° E<br />
+      Click any zone dot for details
+    </div>
+
+  </div><!-- /#map-wrapper -->
+
+</div><!-- /#app -->
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<!-- Leaflet.heat plugin -->
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+<!-- App Script -->
+<script src="script.js"></script>
+
+</body>
+</html>
